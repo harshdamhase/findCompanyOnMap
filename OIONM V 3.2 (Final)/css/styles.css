@@ -1,0 +1,352 @@
+
+
+body {
+    font-family: 'Nunito', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+#map {
+    width: 100vw;
+    height: 100vh;
+}
+
+.city-label {
+    font-style: bold;
+    font-weight: bold;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    color: #000000; /* Dark gray text color */
+    text-align: center;
+    display: inline-block; /* Make the background width match the content */
+    margin: 2px; /* Add margin for a clean look */
+}
+
+
+
+#legend {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+/* Styling for legend title */
+#legend h2 {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+/* Styling for legend items */
+#legend .legend-item {
+    padding: 6px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    border-radius: 4px;
+
+    /* Hover effect */
+    &:hover {
+        background: #f1f1f1;
+    }
+}
+
+/* Styling for legend icons */
+#legend .legend-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+
+#floatingIcon {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background-color: #34495e;
+    color: #fff;
+    padding: 8px;
+    border-radius: 20%;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+    z-index: 1000;
+
+}
+
+
+
+#layerSwitcher {
+    font-size: 10px;
+    position: absolute;
+    top: 5px; /* Move to the top */
+    left: 50px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: background 0.3s, box-shadow 0.3s;
+
+    &:hover {
+        background: rgba(255, 255, 255, 1);
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        appearance: none;
+        background: white;
+        cursor: pointer;
+    }
+}
+
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Adjust height as needed */
+}
+
+#BETA {
+    text-align: center; 
+    font-size: 12px;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    max-width: 160px;
+    background: #fff;
+    color: #000;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+#BETA .release {
+    margin-top: 8px;
+    font-size: 10px;
+    color: #000;
+}
+
+
+
+
+#BETA .twitter a {
+    vertical-align: middle;
+    font-size: 12px;
+    color: #000;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+#BETA .twitter a:hover {
+    color: #1abc9c;
+}
+
+
+
+#searchInput {
+
+    margin-top: 2%;
+        padding: 8px; /* Adjust padding as needed */
+        font-size: 10px; /* Adjust font size as needed */
+        border: 1px solid #ccc; /* Add border */
+        border-radius: 5px; /* Add border radius */
+      }
+      
+      #searchInput:focus {
+        outline: none; /* Remove default focus outline */
+        border-color: #007bff; /* Change border color on focus */
+      }
+      
+    
+    #officeSearchInput{
+    
+        margin-top: 2%;
+        padding: 8px; /* Adjust padding as needed */
+        font-size: 10px; /* Adjust font size as needed */
+        border: 1px solid #ccc; /* Add border */
+        border-radius: 5px; /* Add border radius */
+    }
+    
+    #officeSearchInput:focus {
+        outline: none; /* Remove default focus outline */
+        border-color: #007bff; /* Change border color on focus */
+      }
+
+
+
+
+.tower-office-item {
+    line-height: 0.6;
+    margin-bottom: 50px; /* Add margin bottom */
+}
+.tower-offices-list {
+    max-height: 300px;
+    overflow-y: auto; /* Add vertical scrolling */
+}
+
+/* Style for office popup */
+.office-popup {
+    font-family: Nunito, sans-serif;
+    color: #333; /* Text color */
+    background-color: #fff; /* Background color */
+    border-radius: 5px;/* Rounded corners */
+
+}
+
+/* Style for headings */
+.office-popup h3 {
+    font-size: 16px; /* Heading font size */
+    margin-bottom: 5px; /* Add bottom margin */
+}
+
+/* Style for paragraphs */
+.office-popup p {
+    font-size: 11px; /* Paragraph font size */
+    margin-top: 0; /* Remove top margin */
+    margin-bottom: 8px; /* Add bottom margin */
+}
+
+/* Style for strong (bold) text */
+.office-popup strong {
+    font-weight: bold;
+}
+
+/* Style for anchor links */
+.office-popup a {
+    color: #007bff; /* Link color */
+    text-decoration: none; /* Remove underline */
+}
+
+.office-popup a:hover {
+    text-decoration: underline; /* Add underline on hover */
+}
+
+
+
+
+
+
+/* Style for buttons */
+.office-popup button {
+    background-color: #007bff; /* Button background color */
+    color: #fff; /* Button text color */
+    border: none; /* Remove border */
+    border-radius: 4px; /* Rounded corners */
+    padding: 8px 16px; /* Padding */
+    font-size: 10px; /* Button font size */
+    cursor: pointer; /* Add cursor pointer */
+}
+
+.office-popup button:hover {
+    background-color: #0056b3; /* Button background color on hover */
+}
+
+
+
+
+.directions-button {
+    font-family: Nunito, sans-serif;
+    background-color: #007bff; /* Button background color */
+    color: #fff; /* Button text color */
+    border: none; /* Remove border */
+    border-radius: 4px; /* Rounded corners */
+    padding: 8px 16px; /* Padding */
+    font-size: 10px; /* Button font size */
+    cursor: pointer; /* Add cursor pointer */
+}
+
+.directions-button:hover {
+    background-color: #0056b3; /* Button background color on hover */
+}
+
+.website-link {
+    color: #3498db;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.website-link:hover {
+    text-decoration: underline;
+}
+
+
+
+.copyright-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #34495e; /* Dark blue-gray background */
+    color: #ecf0f1; /* Light gray text color */
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    text-align: center;
+    max-width: 90%;
+    width: 300px;
+    margin: 0 auto;
+    border-radius: 10px;
+}
+
+/* Scrolling dialog content */
+.dialog-content {
+    font-size: 12px; /* Smaller font size */
+    font-style: normal;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.copyright {
+    font-size: 14px; /* Smaller font size */
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+#closeDialog {
+    background-color: #95a5a6; /* Light gray button color */
+    color: #fff;
+    margin-top: 20px;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth color transition */
+}
+
+#closeDialog:hover {
+    background-color: #7f8c8d; /* Slightly darker gray on hover */
+}
+
+
+
+button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 10px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 10px;
+    margin: 4px 0px;
+    cursor: pointer;
+    border-radius: 8px;
+}

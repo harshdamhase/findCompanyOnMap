@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Company On Map</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="leaflet/leaflet.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    <!-- Favicon links -->
+    <link rel="icon" type="image/png" href="images/favicon-16x16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="images/favicon-32x32.png" sizes="32x32">
+
+</head>
+
+<body>
+
+    <div id="map"></div>
+
+    
+
+    <div id="layerSwitcher" class="leaflet-control">
+        <label for="layerSelect">Select Layer:</label>
+        <select id="layerSelect" onchange="handleLayerSwitch(this.value)">
+            <option value="worldImagery" selected>World Imagery</option>
+            <option value="openStreetMap">OpenStreetMap</option>
+            <option value="esriWorldImagery">EsriWorld Imagery</option>
+            <!-- Add more options for additional layers as needed -->
+        </select>
+    </div>
+
+    <!-- Development Stage Info -->
+
+    <div class="container">
+            <div id="BETA">
+        <input type="text" id="officeSearchInput" placeholder="Search for offices...">
+        <input type="text" id="searchInput" placeholder="Search for City, Park, Tower etc...." oninput="searchCity(this.value)">
+        <button onclick="refreshMap()">Refresh Map</button>
+        <div class="release">  <p>Made with ❤️ by Ishwar</p></div>
+        
+        <div class="twitter" style="display: inline-block; vertical-align: middle;">
+            <img src="images/x.jpg" style="height: 10%; width: 10%; vertical-align: middle;" alt="twitter"> 
+          //  <a href="https://twitter.com/IshwarMhase">@IshwarMhase </a>
+        </div>
+        
+    </div>
+</div>
+
+<!-- Floating icon to toggle the legend -->
+<div id="floatingIcon" onclick="toggleFloatingIcon()">
+    <i class="fa fa-question-circle"></i> <!-- Font Awesome question mark icon -->
+</div>
+
+<!-- Legend for Map Markers -->
+<div id="legend" style="display: none;">
+    <div class="legend-item">
+        <img src="images/default-icon.png" alt="City" class="legend-icon">
+        <span>Tap for Details: Stage 1 City</span>
+    </div>
+    <div class="legend-item">
+        <img src="images/stage2-icon.png" alt="City" class="legend-icon">
+        <span>Dive Deeper: Stage 2 City</span>
+    </div>
+    <div class="legend-item">
+        <img src="images/stage3-icon.png" alt="City" class="legend-icon">
+        <span>Get Insights: Stage 3 City</span>
+    </div>
+    <div class="legend-item">
+        <img src="images/office-icon.png" alt="Office" class="legend-icon">
+        <span>Office Details Here</span>
+    </div>
+</div>
+
+
+    <!-- Leaflet Library -->
+    <script src="leaflet/leaflet.js"></script>
+
+    <!-- Firebase Configuration -->
+    <script type="module" src="firebase-config.js"></script>
+
+    <!-- Map and City Data -->
+    <script>
+        var map = L.map('map').setView([22.942724593637806, 79.45663088108532], 5);
+
+        // Initial layers
+        var worldImageryLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> | ' +
+                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> ' +
+                'contributors'
+        });
+
+        var openStreetMapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors '
+        });
+
+        var esriWorldImageryLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Esri, DigitalGlobe, Earthstar Geographics'
+        });
+
+        // Layer group to store active layers
+        var activeLayers = L.layerGroup([worldImageryLayer]).addTo(map);
+
+        // Layer switcher function
+        // Function to switch the active layer
+        function switchLayer(layerName) {
+            activeLayers.clearLayers(); // Remove all layers from the layer group
+
+            if (layerName === 'worldImagery') {
+                worldImageryLayer.addTo(activeLayers);
+                // Add code to add markers for the 'worldImagery' layer if needed
+            } else if (layerName === 'openStreetMap') {
+                openStreetMapLayer.addTo(activeLayers);
+                // Add code to add markers for the 'openStreetMap' layer if needed
+            } else if (layerName === 'esriWorldImagery') {
+                esriWorldImageryLayer.addTo(activeLayers);
+                // Add code to add markers for the 'esriWorldImagery' layer if needed
+            }
+
+            // Store the active layer name in local storage
+            localStorage.setItem('activeLayer', layerName);
+        }
+
+        // Function to handle layer switch
+        function handleLayerSwitch(layerName) {
+            switchLayer(layerName);
+        }
+
+        // Set up click event handler for the select dropdown
+        document.getElementById('layerSelect').addEventListener('change', function () {
+            handleLayerSwitch(this.value);
+        });
+
+        // Retrieve the active layer from local storage and update the dropdown
+        var storedActiveLayer = localStorage.getItem('activeLayer');
+        if (storedActiveLayer) {
+            document.getElementById('layerSelect').value = storedActiveLayer;
+            handleLayerSwitch(storedActiveLayer);
+        }
+        // Set the default layer to 'worldImagery'
+        var defaultLayer = 'worldImagery';
+        document.getElementById('layerSelect').value = defaultLayer;
+        handleLayerSwitch(defaultLayer);
+
+        function getDirections(lat, lng) {
+            // Replace this with your preferred mapping or navigation service
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+        }
+
+
+
+
+        var officeMarker = [];
+
+        var cityUtils = {
+    // Function to create markers and labels for Stage 1 cities
+    createCityMarker: function (map, city, stage1Markers, stage1Labels) {
+        // Create label for the city
+        var cityNameLabel = L.marker(city.location, {
+            icon: L.divIcon({ className: 'city-label', html: `<b>${city.name}</b>` })
+        }).addTo(map);
+
+        // Use different icons based on the city stage
+        var cityIcon;
+        if (city.zoom === 11) {
+            // Stage 1 city (default icon)
+            cityIcon = L.icon({
+                iconUrl: 'images/default-icon.png',
+                iconSize: [32, 32],
+                iconAnchor: [12, 36],
+                popupAnchor: [0, -32]
+            });
+        } else if (city.zoom === 15) {
+            // Stage 2 city icon
+            cityIcon = L.icon({
+                iconUrl: 'images/stage2-icon.png',
+                iconSize: [28, 28],
+                iconAnchor: [12, 36],
+                popupAnchor: [0, -32]
+            });
+        } else {
+            // Stage 3 city icon
+            cityIcon = L.icon({
+                iconUrl: 'images/stage3-icon.png',
+                iconSize: [28, 28],
+                iconAnchor: [12, 36],
+                popupAnchor: [0, -32]
+            });
+        }
+
+        // Create marker for the city
+        var cityMarker = L.marker(city.location, { icon: cityIcon }).addTo(map);
+
+        cityMarker.on('click', function () {
+            map.setView(city.location, city.zoom);
+
+            // Hide the clicked city name
+            cityMarker.unbindPopup().closePopup();
+
+            if (city.nextStageCities && city.nextStageCities.length > 0) {
+                cityUtils.createNextStageMarkers(map, city.nextStageCities, stage1Markers, stage1Labels);
+            }
+
+            // If it's a stage 3 city, create office markers
+            if (city.offices && city.offices.length > 0) {
+                cityUtils.createOfficeMarkers(map, city.offices);
+            }
+
+            // Show names of other cities based on their stages
+            stage1Markers.forEach(function (otherMarker) {
+                if (otherMarker !== cityMarker) {
+                    var otherCity = otherMarker.city; // Add a property to marker indicating its city
+                    otherMarker.setIcon(cityUtils.createCityLabelIcon(otherCity.name));
+                }
+            });
+        });
+
+        // Add a property to the marker indicating its city
+        cityMarker.city = city;
+
+        return { marker: cityMarker, label: cityNameLabel };
+    },
+
+    // Function to create markers for the next stage of cities
+    createNextStageMarkers: function (map, nextStageData, stage1Markers, stage1Labels) {
+        nextStageData.forEach(function (nextData) {
+            var markerAndLabel = cityUtils.createCityMarker(map, nextData, stage1Markers, stage1Labels);
+            stage1Markers.push(markerAndLabel.marker);
+            stage1Labels.push(markerAndLabel.label);
+        });
+    },
+
+            createOfficeMarkers: function (map, offices) {
+                var officeIcon = L.icon({
+                    iconUrl: 'images/office-icon.png',
+                    iconSize: [26, 26],
+                    iconAnchor: [13, 27],
+                    popupAnchor: [1, -25]
+                });
+
+                offices.forEach(function (office) {
+                    var marker = L.marker(office.location, { icon: officeIcon }).addTo(map);
+                    
+                    // Add tooltip for the last stage offices
+                    marker.bindTooltip(`<b>${office.name}</b>`).openTooltip();
+                    
+                    marker.on('click', function () {
+                        // Handle click event for office marker
+                        // You can add custom logic here
+                    });
+
+                    
+                    if (office.officesWithinTower) {
+    // This is a tower with multiple offices
+    var towerPopupContent = `<div class="office-popup">`;
+    towerPopupContent += `<h3>${office.name}</h3>`;
+    towerPopupContent += `<p>${office.details}</p>`;
+    towerPopupContent += '<hr>';
+    towerPopupContent += '<div class="tower-offices-list">';
+
+        office.officesWithinTower.forEach(function (towerOffice, index) {
+    towerPopupContent += `<div class="tower-office-item">`;
+    towerPopupContent += `<h4>${index + 1}. ${towerOffice.name}</h4>`;
+        towerPopupContent += `<p>${towerOffice.details}</p>`;
+        towerPopupContent += `<p><strong>Contact Person:</strong> ${towerOffice.contactPerson}</p>`;
+        towerPopupContent += `<p><strong>Contact Email:</strong> ${towerOffice.contactEmail}</p>`;
+        towerPopupContent += `<p><strong>Phone:</strong> ${towerOffice.phone}</p>`;
+        // Add website information
+        towerPopupContent += `<p><strong>Website:</strong> <a href="${towerOffice.website}" target="_blank">${towerOffice.website}</a></p>`;
+        towerPopupContent += '</div>';
+    });
+
+    towerPopupContent += '</div>'; // Close tower offices list
+    towerPopupContent += '</div>'; // Close office-popup
+
+    // Add the "Get Directions" button at the bottom
+    towerPopupContent += '<hr>';
+    towerPopupContent += '<button class="directions-button" onclick="getDirections(' + office.location[0] + ', ' + office.location[1] + ')">Get Directions</button>';
+    // Add the combined popup content for the tower
+    marker.bindPopup(towerPopupContent, {
+        minWidth: 200, // Adjust as needed
+        maxWidth: 300 // Adjust as needed
+    });
+} else {
+    // This is a location with a single office
+    marker.bindPopup(`
+        <div class="office-popup">
+            <h3>${office.name}</h3>
+            <p>${office.details}</p>
+            <p><strong>Contact Person:</strong> ${office.contactPerson}</p>
+            <p><strong>Contact Email:</strong> ${office.contactEmail}</p>
+            <p><strong>Phone:</strong> ${office.phone}</p>
+            <p><strong>Website:</strong> <a href="${office.website}" target="_blank">${office.website}</a></p>
+            <hr>
+            <button class="directions-button" onclick="getDirections(${office.location[0]}, ${office.location[1]})">Get Directions</button>
+        </div>
+    `, {
+        minWidth: 200, // Adjust as needed
+        maxWidth: 300 // Adjust as needed
+    });
+}
+officeMarker.push(marker);
+
+                });
+            }
+        };
+
+        function toggleLegend() {
+            var legend = document.getElementById('legend');
+            legend.style.display = (legend.style.display === 'none' || legend.style.display === '') ? 'block' : 'none';
+        }
+
+        function toggleFloatingIcon() {
+            var icon = document.getElementById('floatingIcon');
+            var legend = document.getElementById('legend');
+
+            // Toggle the legend and move the icon up or down accordingly
+            if (legend.style.display === 'none' || legend.style.display === '') {
+                legend.style.display = 'block';
+                icon.style.transform = 'translateY(-180px)';
+            } else {
+                legend.style.display = 'none';
+                icon.style.transform = 'translateY(0)';
+            }
+        }
+
+
+
+
+
+
+
+
+// Function to perform real-time recursive search for offices
+function performSearch() {
+    // Get the search input value
+    var searchInput = document.getElementById("officeSearchInput").value.toLowerCase();
+    clearMarkersAndLabels();
+    clearOfficeMarker();
+    clearOfficeMarkers();
+    if (searchInput === '') {
+        map.setView([22.942724593637806, 79.45663088108532], 5);
+        addStage1Markers();
+        return; // Exit the function if the search input is empty
+    }
+
+    // Clear existing office markers
+   
+
+    // Initialize bounds for zooming
+    var bounds = [];
+
+    // Function to recursively search for offices in nested city structures
+    function searchInCities(cities) {
+        cities.forEach(city => {
+            if (city.offices) {
+                city.offices.forEach(office => {
+                    // Check if the office name contains the search input
+                    if (office.name.toLowerCase().includes(searchInput)) {
+                        // Create marker for the matching office
+                        createOfficeMarkers(map, [office]);
+
+                        // Add the office location to the bounds
+                        bounds.push(office.location);
+                    }
+                });
+
+                // Check if any office within tower matches the query
+                city.offices.forEach(tower => {
+                    if (tower.officesWithinTower) {
+                        tower.officesWithinTower.forEach(officeWithinTower => {
+                            // Check if the office name within tower contains the search input
+                            if (officeWithinTower.name.toLowerCase().includes(searchInput)) {
+                                // Create marker for the main tower
+                                createOfficeMarkers(map, [tower]);
+
+                                // Add the main tower location to the bounds
+                                bounds.push(tower.location);
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Recursively search in nested cities
+            if (city.nextStageCities) {
+                searchInCities(city.nextStageCities);
+            }
+        });
+    }
+
+    // Perform search starting from stage1Cities
+    searchInCities(stage1Cities);
+
+    // Fit the map to the bounds if there are matching offices
+    if (bounds.length > 0) {
+        map.fitBounds(bounds);
+    }
+}
+
+// Function to handle changes in the search input
+function handleSearchInput() {
+    // Debounce the search function to improve performance
+    clearTimeout(window.searchTimeout);
+    window.searchTimeout = setTimeout(performSearch, 300); // Adjust debounce time as needed
+}
+
+// Add event listener to the search input for real-time search
+document.getElementById("officeSearchInput").addEventListener("input", handleSearchInput);
+
+
+function clearOfficeMarker() {
+    // Remove all existing office markers from the map
+    officeMarker.forEach(marker => {
+        map.removeLayer(marker);
+    });
+
+    // Clear the officeMarkers array
+    officeMarker = [];
+}
+
+// Function to clear office markers
+function clearOfficeMarkers() {
+    // Remove all existing office markers from the map
+    officeMarkers.forEach(marker => {
+        map.removeLayer(marker);
+    });
+
+    // Clear the officeMarkers array
+    officeMarkers = [];
+}
+
+// Function to clear the office search input field
+function clearOfficeSearch() {
+    document.getElementById('officeSearchInput').value = '';
+}
+
+// Array to store office markers
+var officeMarkers = [];
+
+// Function to create office markers
+function createOfficeMarkers(map, offices) {
+    var officeIcon = L.icon({
+        iconUrl: 'images/office-icon.png',
+        iconSize: [26, 26],
+        iconAnchor: [13, 27],
+        popupAnchor: [1, -25]
+    });
+
+    offices.forEach(function (office) {
+        var marker = L.marker(office.location, { icon: officeIcon }).addTo(map);
+
+        // Add tooltip for the office marker
+        marker.bindTooltip(`<b>${office.name}</b>`).openTooltip();
+
+        // Add popup for the office marker
+        if (office.officesWithinTower) {
+            // This is a tower with multiple offices
+            var towerPopupContent = `<div class="office-popup">`;
+            towerPopupContent += `<h3>${office.name}</h3>`;
+            towerPopupContent += `<p>${office.details}</p>`;
+            towerPopupContent += '<hr>';
+            towerPopupContent += '<div class="tower-offices-list">';
+
+            office.officesWithinTower.forEach(function (towerOffice, index) {
+                towerPopupContent += `<div class="tower-office-item">`;
+                towerPopupContent += `<h4>${index + 1}. ${towerOffice.name}</h4>`;
+                towerPopupContent += `<p>${towerOffice.details}</p>`;
+                towerPopupContent += `<p><strong>Contact Person:</strong> ${towerOffice.contactPerson}</p>`;
+                towerPopupContent += `<p><strong>Contact Email:</strong> ${towerOffice.contactEmail}</p>`;
+                towerPopupContent += `<p><strong>Phone:</strong> ${towerOffice.phone}</p>`;
+                // Add website information
+                towerPopupContent += `<p><strong>Website:</strong> <a href="${towerOffice.website}" target="_blank">${towerOffice.website}</a></p>`;
+                towerPopupContent += '</div>';
+            });
+
+            towerPopupContent += '</div>'; // Close tower offices list
+            towerPopupContent += '</div>'; // Close office-popup
+
+            // Add the "Get Directions" button at the bottom
+            towerPopupContent += '<hr>';
+            towerPopupContent += '<button class="directions-button" onclick="getDirections(' + office.location[0] + ', ' + office.location[1] + ')">Get Directions</button>';
+            // Add the combined popup content for the tower
+            marker.bindPopup(towerPopupContent, {
+                minWidth: 200, // Adjust as needed
+                maxWidth: 300 // Adjust as needed
+            });
+        } else {
+            // This is a location with a single office
+            marker.bindPopup(`
+                <div class="office-popup">
+                    <h3>${office.name}</h3>
+                    <p>${office.details}</p>
+                    <p><strong>Contact Person:</strong> ${office.contactPerson}</p>
+                    <p><strong>Contact Email:</strong> ${office.contactEmail}</p>
+                    <p><strong>Phone:</strong> ${office.phone}</p>
+                    <p><strong>Website:</strong> <a href="${office.website}" target="_blank">${office.website}</a></p>
+                    <hr>
+                    <button class="directions-button" onclick="getDirections(${office.location[0]}, ${office.location[1]})">Get Directions</button>
+                </div>
+            `, {
+                minWidth: 200, // Adjust as needed
+                maxWidth: 300 // Adjust as needed
+            });
+        }
+
+        // Push the marker to the officeMarkers array
+        officeMarkers.push(marker);
+    });
+}
+
+ 
+
+
+function searchCity(cityName) {
+    // Convert input to lowercase for case-insensitive search
+    cityName = cityName.toLowerCase();
+    clearOfficeMarkers();
+    clearOfficeMarker();
+
+    if (cityName === '') {
+        clearMarkersAndLabels();
+        map.setView([22.942724593637806, 79.45663088108532], 5);
+        // Add stage 1 markers when input field is empty
+        addStage1Markers();
+        return; // Exit the function
+    }
+    // Define a recursive search function
+    function recursiveSearch(cities) {
+    let matchFound = false; // Flag to track if any match is found
+    cities.forEach(city => {
+        // Convert city name to lowercase for comparison
+        const cityLowerCase = city.name.toLowerCase();
+
+        // Check if the city name partially matches the search query (case-insensitive)
+        if (cityLowerCase.indexOf(cityName) !== -1) {
+            matchFound = true; // Set flag to true if match is found
+
+            // Zoom to the location of the matched city
+            map.setView(city.location, city.zoom);
+
+            // Create marker and label for the matched city
+            var markerAndLabel = cityUtils.createCityMarker(map, city, stage1Markers, stage1Labels);
+            stage1Markers.push(markerAndLabel.marker);
+            stage1Labels.push(markerAndLabel.label);
+
+            // If it's a stage 2 city, also create markers and labels for its next stage cities
+            if (city.nextStageCities && city.nextStageCities.length > 0) {
+                cityUtils.createNextStageMarkers(map, city.nextStageCities, stage1Markers, stage1Labels);
+            }
+        }
+
+        // Recursively search in next stage cities if no match is found yet
+        if (!matchFound && city.nextStageCities && city.nextStageCities.length > 0) {
+            recursiveSearch(city.nextStageCities);
+        }
+    });
+}
+
+
+    // Clear all existing markers and labels before performing a new search
+    clearMarkersAndLabels();
+
+    // Start the recursive search from the top-level cities
+    recursiveSearch(stage1Cities);
+}
+
+// Function to add stage 1 markers
+function addStage1Markers() {
+    stage1Cities.forEach(city => {
+        // Create marker and label for each city
+        var markerAndLabel = cityUtils.createCityMarker(map, city, stage1Markers, stage1Labels);
+        stage1Markers.push(markerAndLabel.marker);
+        stage1Labels.push(markerAndLabel.label);
+    });
+}
+
+function clearMarkersAndLabels() {
+    // Remove all existing markers
+    stage1Markers.forEach(marker => {
+        marker.remove();
+    });
+    
+    // Remove all existing labels
+    stage1Labels.forEach(label => {
+        label.remove();
+    });
+
+    // Clear the arrays
+    stage1Markers = [];
+    stage1Labels = [];
+}
+
+function refreshMap() {
+            location.reload();
+        }
+
+        
+        </script>
+        
+        <!-- City Data -->
+        <script src="city-data.js"></script>
+
+        <script defer src="copyright-dialog.js"></script>
+
+
+</body>
+
+</html>
